@@ -141,6 +141,5 @@ This endpoint allows you to upload a CSV file containing multiple patient record
 This project demonstrates how to create a FastAPI application for making hospital readmission predictions using a pre-trained XGBoost model and data preprocessing transformers. The application provides endpoints for both individual and group predictions, making it useful for various scenarios in healthcare analytics.
 
 ### Demonstration
-   
-   https://github.com/nicolas-bs/midterm_proyect/assets/69317512/777031cf-d912-4c3a-b0d8-08858a1b8b44
+   https://github.com/nicolas-bs/midterm_proyect/assets/69317512/3226d80d-666f-4e5f-b7b6-8d95d28f00c5
 
