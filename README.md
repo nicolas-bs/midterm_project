@@ -1,4 +1,4 @@
-# Hospital Readmissions Prediction with XGBoost
+# Hospital Readmissions Prediction with XGBoost-Classifier
 
 This is a README file for a machine learning project that predicts hospital readmissions using XGBoost. The project involves data preprocessing, model training, and model evaluation.
 
@@ -19,7 +19,7 @@ This is a README file for a machine learning project that predicts hospital read
 - [Demonstration](#demonstration)
 
 ### Overview
-In this project, we use the XGBoost algorithm to build a predictive model for hospital readmissions. We start by loading and preprocessing the dataset, splitting it into training, validation, and test sets, and encoding categorical and ordinal features. We then train an XGBoost model, evaluate its performance, and save the trained model for future use.
+In this project, we use the XGBoost Classifier algorithm to build a predictive model for hospital readmissions. We start by loading and preprocessing the dataset, splitting it into training, validation, and test sets, and encoding categorical and ordinal features. We then train an XGBoost model, evaluate its performance, and save the trained model for future use.
 
 ### Getting Started
 Before you can run this project, make sure you have the required libraries installed. You can install them using the following commands:
