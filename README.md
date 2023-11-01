@@ -30,6 +30,11 @@ Before you can run this project, make sure you have the required libraries insta
 ```
 ### Data
 The dataset used in this project is loaded from a CSV file named `hospital_readmissions.csv.` The target variable is readmitted, which indicates whether a patient was readmitted to the hospital. The data preprocessing steps include converting the target variable to a binary format and encoding categorical and ordinal features.
+ 
+**Data Source:**
+The dataset can be obtained from the UCI Machine Learning Repository.
+
+[Diabetes 130-US Hospitals for Years 1999-2008](https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008)
 
 #### Preprocessing
 
