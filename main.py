@@ -68,9 +68,14 @@ async def upload_and_predict(file: UploadFile):
         # Calculate the proportion of positive values
         proportion_positive = sum(readmitted) / len(readmitted)
 
+        # Create a list to store the mixed result
+        mixed_result = []
+        for prob, is_readmitted in zip(y_pred, readmitted):
+            mixed_result.append({'probability': prob, 'is_readmitted': is_readmitted})
+
+        # Return the mixed result followed by the proportion
         result = {
-            'readmitted_probability': y_pred,
-            'readmitted': readmitted,
+            'mixed_result': mixed_result,
             'proportion_positive': proportion_positive
         }
         return JSONResponse(content=result)
