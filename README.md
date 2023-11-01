@@ -60,6 +60,8 @@ After cross-validation, we train the final model using the entire training datas
 #### Saving the model
 The trained XGBoost model and the preprocessing transformers are saved to a binary file named xgb_eta01.bin using the pickle module. This allows for reusing the model without the need for retraining.
 
+https://github.com/nicolas-bs/midterm_proyect/assets/69317512/6fae4ac5-958b-4a1a-8ca6-e59ba3ec9165
+
 #### Usage
 You can use the saved model for making predictions on new data. Here's an example of how to load the model and make predictions:
 
