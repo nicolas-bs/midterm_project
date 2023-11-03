@@ -1,6 +1,6 @@
 # Hospital Readmissions Prediction with XGBoost-Classifier
 
-This is a README file for a machine learning project that predicts hospital readmissions using XGBoost. The project involves data preprocessing, model training, and model evaluation.
+Machine learning project that predicts hospital readmissions using XGBoost. The project involves data preprocessing, model training, model evaluation and deployment
 
 ![Hospital Room](https://www.hopkinsmedicine.org/-/media/patient-care/images/patient-rooms-1.jpg)
 
@@ -27,6 +27,8 @@ Before you can run this project, make sure you have the required libraries insta
  pip install pandas
  pip install xgboost
  pip install scikit-learn
+ pip install fastapi
+ pip install "uvicorn[standard]"
 ```
 ### Data
 The dataset used in this project is loaded from a CSV file named `hospital_readmissions.csv.` The target variable is readmitted, which indicates whether a patient was readmitted to the hospital. The data preprocessing steps include converting the target variable to a binary format and encoding categorical and ordinal features.
