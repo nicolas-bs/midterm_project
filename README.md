@@ -38,20 +38,20 @@ The dataset can be obtained from the UCI Machine Learning Repository.
 
 #### Preprocessing
 
-- Categorical columns: glucose_test, A1Ctest
-- Ordinal columns: age, medical_specialty, diag_1, diag_2, diag_3, change, diabetes_med
+- **Categorical columns**: `glucose_test`, `A1Ctest`
+- **Ordinal columns**: `age`, `medical_specialty`, `diag_1`, `diag_2`, `diag_3`, `change`, `diabetes_med`
 
-A column transformer is used to apply appropriate encodings to the features. One-hot encoding is used for categorical features, and ordinal encoding is used for ordinal features.
+A column transformer is used to apply appropriate encodings to the features. One-hot encoding is used for categorical features, and Ordinal encoding is used for ordinal features.
 
 #### Training
 We train an XGBoost model with the following hyperparameters:
 
-- Learning rate (eta): 0.1
-- Maximum depth of trees: 4
-- Minimum child weight: 5
-- Objective: Binary logistic
-- Random seed: 1
-- Gamma: 1
+- Learning rate (eta): `0.1`
+- Maximum depth of trees: `4`
+- Minimum child weight: `5`
+- Objective: `binary:logistic`
+- Random seed: `1`
+- Gamma: `1`
 
 Evaluation metric: AUC (Area Under the Receiver Operating Characteristic curve)
 The number of boosting rounds is set to 105. We train the model using the training data and evaluate it on the validation data.
