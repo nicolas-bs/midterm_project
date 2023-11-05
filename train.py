@@ -2,10 +2,11 @@ import pandas as pd
 import xgboost as xgb
 import pickle
 import numpy as np
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import train_test_split, KFold, GridSearchCV
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.compose import make_column_transformer
 from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt  # Added import for plotting
 
 # Load the dataset
 df = pd.read_csv(r'hospital_readmissions.csv')
@@ -52,30 +53,120 @@ feature_names = [name.replace('[', '_').replace(']', '_').replace('<', '_') for 
 dtrain = xgb.DMatrix(X_train, label=y_train, feature_names=feature_names)
 dval = xgb.DMatrix(X_val, label=y_val, feature_names=feature_names)
 
-params = {
-    'eta': 0.1,
-    'max_depth': 4,
-    'min_child_weight': 5,
-    'objective': 'binary:logistic',
-    'seed': 1,
-    'verbosity': 2,
-    'gamma': 1,
-    'eval_metric': 'auc'
+param_grid = {
+    'eta': [0.1, 0.01, 0.001],  # Learning rate
+    'max_depth': [3, 4, 5],    # Maximum tree depth
+    'min_child_weight': [10, 15, 20],
+    'subsample': [0.7, 0.8, 0.9, 1.0],
+     'gamma': [0, 0.1, 0.2, 0.3] # Minimum sum of instance weight (hessian) needed in a child
 }
 
-# Train the XGBoost model
-num_boost_round = 105  # Define the number of boosting rounds
-model = xgb.train(params, dtrain, num_boost_round=num_boost_round)
+# Create the XGBoost model
+xgb_model = xgb.XGBClassifier(
+    objective='binary:logistic',
+    eval_metric='auc',
+    seed=1,
+    verbosity=2
+)
 
-# Predict using the trained model
+# Create the grid search object
+grid_search = GridSearchCV(
+    estimator=xgb_model,
+    param_grid=param_grid,
+    scoring='roc_auc',  # Use ROC AUC as the evaluation metric
+    cv=3,
+    verbose=1
+)
+
+# Fit the grid search to the data
+grid_search.fit(X_train, y_train)
+
+# Get the best parametes
+params = grid_search.best_params_
+params['eval_metric'] = 'auc'
+print(f'The best params are: {params}')
+
+# Train the XGBoost model and find the best iteration
+evals_result = {}
+watchlist = [(dtrain, 'train'), (dval, 'val')]
+
+model = xgb.train(params, dtrain, evals=watchlist, num_boost_round=300, evals_result=evals_result, verbose_eval=20, early_stopping_rounds=20)
+
+best_num_boost_round = model.best_iteration
+
+# Plot the AUC values during training
+train_auc = evals_result['train']['auc']
+val_auc = evals_result['val']['auc']
+best_iteration = model.best_iteration
+
+# Plot the AUC values
+plt.figure(figsize=(10, 6))
+plt.plot(train_auc, label='Train AUC')
+plt.plot(val_auc, label='Validation AUC')
+plt.xlabel('Iteration')
+plt.ylabel('AUC')
+plt.title('AUC vs. Iteration')
+plt.axvline(x=best_iteration, color='r', linestyle='--', label=f'Best Iteration: {best_iteration}')
+plt.legend()
+plt.grid()
+plt.show()
+plt.clf()  
+
+# Predict using the trained model on the validation set
 y_pred = model.predict(dval)
 print(roc_auc_score(y_val, y_pred).round(4))
 
+def confusion_matrix_dataframe(y_val, y_pred):
+    scores = []
+    thresholds = np.arange(0, 1, 0.01)
+
+    for t in thresholds:
+        actual_positive = (y_val == 1)
+        actual_negative = (y_val == 0)
+
+        predict_positive = (y_pred >= t)
+        predict_negative = (y_pred < t)
+
+        tp = (predict_positive & actual_positive).sum()
+        tn = (predict_negative & actual_negative).sum()
+
+        fp = (predict_positive & actual_negative).sum()
+        fn = (predict_negative & actual_positive).sum()
+
+        scores.append((t, tp, fp, fn, tn))
+
+    columns = ['Threshold', 'True Positive', 'False Positive', 'False Negative', 'True Negative']
+    df_scores = pd.DataFrame(scores, columns=columns)
+
+    df_scores['Precision'] = df_scores['True Positive'] / (df_scores['True Positive'] + df_scores['False Positive'])
+    df_scores['Recall'] = df_scores['True Positive'] / (df_scores['True Positive'] + df_scores['False Negative'])
+
+    return df_scores
+
+df_scores = confusion_matrix_dataframe(y_val, y_pred)
+
+plt.figure(figsize=(10, 6))
+
+plt.plot(df_scores['Threshold'], df_scores['Precision'], label='Precision', linewidth=2)
+plt.plot(df_scores['Threshold'], df_scores['Recall'], label='Recall', linewidth=2)
+
+threshold_value = 0.46  # Set the threshold value you want to highlight
+plt.axvline(x=threshold_value, color='r', linestyle='--', alpha=0.4)
+plt.text(threshold_value + 0.01, 0.1, f'Threshold = {threshold_value}', color='r', fontsize=12, verticalalignment='bottom', horizontalalignment='left')
+
+plt.xlabel('Threshold', fontsize=14)
+plt.ylabel('Score', fontsize=14)
+plt.title('Precision and Recall vs. Threshold', fontsize=16)
+plt.legend(fontsize=12)
+
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.show()
+     
 # Define a train function for later use
 def train(X, y, params, num_boost_round, feature_names):
     X_transformed = preprocessor.transform(X)
     dtrain = xgb.DMatrix(X_transformed, label=y, feature_names=feature_names)
-    model = xgb.train(params, dtrain, num_boost_round=num_boost_round)
+    model = xgb.train(params, dtrain, num_boost_round=best_num_boost_round)
     return model
 
 # Define a predict function for later use
@@ -88,12 +179,13 @@ def predict(X, preprocessor, model, feature_names):
 kfold = KFold(n_splits=10, shuffle=True, random_state=1)
 scores = []
 
+# Perform k-fold cross-validation
 for fold, (train_idx, val_idx) in enumerate(kfold.split(df_full_train)):
     df_train = df_full_train.iloc[train_idx]
     df_val = df_full_train.iloc[val_idx]
     y_train = df_train['readmitted'].values
     y_val = df_val['readmitted'].values
-    model = train(df_train, y_train, params, 105, feature_names)
+    model = train(df_train, y_train, params, best_num_boost_round, feature_names)
     y_pred = predict(df_val, preprocessor, model, feature_names)
     auc = roc_auc_score(y_val, y_pred)
     scores.append(auc)
@@ -102,13 +194,16 @@ for fold, (train_idx, val_idx) in enumerate(kfold.split(df_full_train)):
 print('Validation results:')
 print(f'Mean AUC: {np.mean(scores):.3f} +/- {np.std(scores):.3f}')
 
-model = train(df_full_train, df_full_train['readmitted'].values, params, num_boost_round, feature_names)
+# Train the final model on the full training data
+model = train(df_full_train, df_full_train['readmitted'].values, params, best_num_boost_round, feature_names)
+
+# Predict on the test set using the final model
 y_pred = predict(df_test, preprocessor, model, feature_names)
 auc = roc_auc_score(y_test, y_pred)
 print(f'Final model AUC on the test set: {auc:.3f}')
 
-# Saving the Model
-output_file =  'xgb_eta01.bin'
+# Save the preprocessor and model to a binary file
+output_file = 'xgb_eta01.bin'
 with open(output_file, 'wb') as f_out:
     pickle.dump((preprocessor, model), f_out)
 
